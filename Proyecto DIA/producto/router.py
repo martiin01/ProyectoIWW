@@ -7,3 +7,4 @@ from .views import *
 routerProductos = DefaultRouter()
 # Registering the viewset to the router.
 routerProductos.register(prefix="producto", basename="producto", viewset=ProductoView)
+
