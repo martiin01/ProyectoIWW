@@ -3,7 +3,7 @@ from user.models import User
 
 # Create your models here.
 class Cupon(models.Model):
-    idCupon = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
+    idUser = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
     name_Cupon = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True, null=True)
 
