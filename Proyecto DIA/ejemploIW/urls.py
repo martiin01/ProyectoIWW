@@ -1,40 +1,59 @@
-"""
-URL configuration for ejemploIW project.
+# ejemploIW/urls.py
 
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
-"""
 from django.contrib import admin
-from django.urls import path, re_path
-from user import views
-from drf_spectacular.views import SpectacularRedocView, SpectacularSwaggerView, SpectacularAPIView
-
 from django.urls import path, include
+from django.views.generic import RedirectView
 
-from producto.router import *
-from sede.router import *
+from producto.router import router as routerProductos
+from sede.router     import router as routerSedes
+from categoria.router     import router as routerCategoria
+from user import views as user_views
 
+from drf_spectacular.views import (
+    SpectacularAPIView,
+    SpectacularSwaggerView,
+    SpectacularRedocView,
+)
+from rest_framework.routers import DefaultRouter
+
+# Routers de cada app
+from producto.router import router as routerProductos
+from sede.router    import router as routerSedes
+
+# Tu ViewSet de cupones
+from cupon.views import CuponViewSet
+
+# Creamos un router nuevo solo para cupones
+routerCupon = DefaultRouter()
+routerCupon.register(r'cupones', CuponViewSet, basename='cupon')
 
 urlpatterns = [
-    # API Schema
-    path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
-    # Swagger UI:
-    path('docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    # Redoc UI:
-    path('redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+
+    path(
+      "",
+      RedirectView.as_view(url="/docs/", permanent=False),
+      name="root-redirect"
+    ),
+    # Admin de Django
     path('admin/', admin.site.urls),
-    re_path(r'user/$', views.Users_list),
-    re_path(r'user/([0-9])$', views.Users_detail),
-    path("", include(routerProductos.urls)),
-    path("", include(routerSedes.urls))
+
+    # Documentación OpenAPI
+    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+    path('docs/',      SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('redoc/',     SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+
+    # Endpoints de usuario
+    path('api/user/',         user_views.Users_list,   name='user-list'),
+    path('api/user/<int:pk>/', user_views.Users_detail, name='user-detail'),
+
+    # APIs de producto, sede y cupon
+    path('api/', include(routerProductos.urls)),
+    path('api/', include(routerSedes.urls)),
+    path('api/', include(routerCupon.urls)),
+
+    path('api/', include(routerProductos.urls)),
+    path('api/', include(routerSedes.urls)),
+    path('api/', include(routerCupon.urls)),
+    path("api/", include(routerCategoria.urls))
+
 ]

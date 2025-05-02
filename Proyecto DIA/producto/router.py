@@ -1,10 +1,8 @@
-from django.urls import path
 from rest_framework.routers import DefaultRouter
-from .views import *
+from .views import ProductoView
 
+# Crea y configura el router
+router = DefaultRouter()
+router.register(prefix="producto", basename="producto", viewset=ProductoView)
 
-# Creating a new router object.
-routerProductos = DefaultRouter()
-# Registering the viewset to the router.
-routerProductos.register(prefix="producto", basename="producto", viewset=ProductoView)
-
+# ¡NO definas ninguna función router() aquí!

@@ -1,40 +1,53 @@
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.response import Response
 from .models import Cupon
 from .serializers import CuponSerializer
-from rest_framework import viewsets
 
-# Create your views here.
-class CuponView(
-    viewsets.ModelViewSet,
-):
 
+class CuponViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para CRUD de Cupones.
+    - GET    /cupon/                → list()
+    - POST   /cupon/                → create()
+    - GET    /cupon/{pk}/           → retrieve()
+    - PUT    /cupon/{pk}/           → update()
+    - PATCH  /cupon/{pk}/           → partial_update()
+    - DELETE /cupon/{pk}/           → destroy()
+    """
     queryset = Cupon.objects.all()
     serializer_class = CuponSerializer
 
-
-    def list(self, request):
+    def list(self, request, *args, **kwargs):
         """
-        If the action is list, then try to get the query parameter "select" and return the filtered
-        queryset. If the query parameter "select" doesn't exist, then return all objects. If the action
-        is not list, then return all objects
-
-        :return: List of all products.
+        Si viene ?select=SALE10,SALE20 filtra solo esos códigos.
+        Si no, devuelve todos los cupones.
         """
+        select = request.query_params.get("select")
+        qs = self.get_queryset()
+        if select:
+            codes = [c.strip() for c in select.split(",") if c.strip()]
+            qs = qs.filter(code__in=codes)
 
-        result = Cupon.objects.all()
-        return Response(self.serializer_class(result, many=True).data, status=200)
+        # Paginación estándar
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
         """
-        It creates a new object, then returns a response with a success message
-
-        :param request: The request object
-
-        :return: The response is a dictionary with a key of "success" and a value of "ok."
+        Valida y crea un nuevo cupón.
+        En caso de éxito devuelve {"success": "ok", "id": <nuevo_id>}.
         """
-        try:
-            super().create(request, *args, **kwargs)
-            return Response({"success": "ok"}, status=201)
-        except ValueError:
-            return Response({"error": "Invalid date"}, status=400)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        cupon = serializer.save()
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            {"success": "ok", "id": cupon.id},
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )

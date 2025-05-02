@@ -1,40 +1,54 @@
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.response import Response
 from .models import Categoria
 from .serializers import CategoriaSerializer
-from rest_framework import viewsets
 
-# Create your views here.
-class CategoriaView(
-    viewsets.ModelViewSet,
-):
-
+class CategoriaViewSet(viewsets.ModelViewSet):
+    """
+    CRUD completo para categorías:
+    - GET    /categorias/         → list()
+    - POST   /categorias/         → create()
+    - GET    /categorias/{pk}/    → retrieve()
+    - PUT    /categorias/{pk}/    → update()
+    - PATCH  /categorias/{pk}/    → partial_update()
+    - DELETE /categorias/{pk}/    → destroy()
+    """
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
 
-
-    def list(self, request):
+    def list(self, request, *args, **kwargs):
         """
-        If the action is list, then try to get the query parameter "select" and return the filtered
-        queryset. If the query parameter "select" doesn't exist, then return all objects. If the action
-        is not list, then return all objects
-
-        :return: List of all products.
+        Si viene ?select=1,2,3 filtra solo esas categorías por PK;
+        si no, devuelve todas.
         """
+        qs = self.get_queryset()
+        select = request.query_params.get("select")
+        if select:
+            try:
+                pks = [int(x) for x in select.split(",") if x.strip().isdigit()]
+                qs = qs.filter(pk__in=pks)
+            except ValueError:
+                pass  # ignoramos valores no numéricos
 
-        result = Categoria.objects.all()
-        return Response(self.serializer_class(result, many=True).data, status=200)
+        # aplica paginación si está configurada
+        page = self.paginate_queryset(qs)
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = self.get_serializer(qs, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def create(self, request, *args, **kwargs):
         """
-        It creates a new object, then returns a response with a success message
-
-        :param request: The request object
-
-        :return: The response is a dictionary with a key of "success" and a value of "ok."
+        Valida y crea una nueva categoría. Devuelve {"success":"ok", "id": <pk>}.
         """
-        try:
-            super().create(request, *args, **kwargs)
-            return Response({"success": "ok"}, status=201)
-        except ValueError:
-            return Response({"error": "Invalid date"}, status=400)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        categoria = serializer.save()
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            {"success": "ok", "id": categoria.id},
+            status=status.HTTP_201_CREATED,
+            headers=headers
+        )

@@ -1,8 +1,17 @@
+# cupon/serializers.py
+
 from rest_framework import serializers
 from .models import Cupon
+from producto.serializers import ProductoSerializer
 
-class ProductoSerializer(serializers.ModelSerializer):
+class CuponSerializer(serializers.ModelSerializer):
+    productos = ProductoSerializer(many=True, read_only=True)
 
     class Meta:
-        model = Cupon 
-        fields = ( 'pk','idCupon', 'name_Cupon', 'description')
+        model = Cupon
+        fields = [
+            "id",
+            "code",
+            "description",
+            "productos",
+        ]

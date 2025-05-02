@@ -1,11 +1,30 @@
 from django.db import models
-from user.models import User
+from django.conf import settings   # para referenciar al user via AUTH_USER_MODEL
 
-# Create your models here.
 class Categoria(models.Model):
-    idUser = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
-    name = models.CharField(max_length=100, unique=True)
-    description = models.TextField(blank=True, null=True)
+    # ─── Quién la creó ───────────────────────────────────────
+    usuario = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="categorias",
+    )
 
-    def __str__(self):
-        return self.name
+    # ─── Datos de la categoría ───────────────────────────────
+    nombre      = models.CharField(
+        max_length=100,
+        unique=True,
+        help_text="Nombre identificador de la categoría"
+    )
+    descripcion = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Texto descriptivo opcional"
+    )
+
+    def __str__(self) -> str:
+        return self.nombre
+
+    class Meta:
+        ordering = ["nombre"]
+        verbose_name = "Categoría"
+        verbose_name_plural = "Categorías"

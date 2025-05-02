@@ -1,18 +1,26 @@
 from django.db import models
-from user.models import User
-from cupon.models import Cupon
-from categoria.models import Categoria
+from django.conf import settings
 
-# Create your models here.
 class Producto(models.Model):
-    idUser = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
-    idCupon = models.ForeignKey(Cupon, on_delete=models.CASCADE, default=1)
-    idCategoria = models.ForeignKey(Categoria, on_delete=models.CASCADE, default=1)
-    name = models.CharField(blank=False, null=False, max_length=240)
-    description = models.CharField(blank=True, null=True, max_length=240)
-    price = models.FloatField(blank=False, null=False, default=1)
+    usuario   = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="productos",
+    )
+    categoria = models.ForeignKey(
+        "categoria.Categoria",
+        on_delete=models.PROTECT,
+        related_name="productos",
+    )
 
-
+    nombre        = models.CharField(max_length=240)
+    descripcion   = models.TextField(blank=True, null=True)
+    precio        = models.DecimalField(max_digits=8, decimal_places=2)
 
     def __str__(self):
-        return self.name
+        return self.nombre
+
+    class Meta:
+        ordering = ["nombre"]
+        verbose_name = "Producto"
+        verbose_name_plural = "Productos"
