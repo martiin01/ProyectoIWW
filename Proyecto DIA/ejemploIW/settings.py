@@ -5,8 +5,8 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ─── Seguridad básica ─────────────────────────────────────────────────────
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "django-insecure-xxxx")
-DEBUG      = True
+SECRET_KEY   = os.getenv("DJANGO_SECRET_KEY", "django-insecure-xxxx")
+DEBUG        = True
 ALLOWED_HOSTS = []
 
 # ─── Aplicaciones ─────────────────────────────────────────────────────────
@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "categoria",
     "cupon",
     "sede",
+    "carrito",
 ]
 
 # ─── Middleware ligero ────────────────────────────────────────────────────
@@ -75,12 +76,16 @@ DATABASES = {
 REST_FRAMEWORK = {
     # Usamos drf-spectacular para el esquema OpenAPI
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
-    # Autenticación y permisos básicos
+
+    # Autenticación: primero BasicAuth para Swagger, luego SessionAuth
     "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.BasicAuthentication",
         "rest_framework.authentication.SessionAuthentication",
     ],
+
+    # Permisos: cualquiera puede leer, pero solo autenticados pueden modificar
     "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.AllowAny",
+        "rest_framework.permissions.IsAuthenticatedOrReadOnly",
     ],
 }
 
@@ -88,7 +93,19 @@ REST_FRAMEWORK = {
 SPECTACULAR_SETTINGS = {
     "TITLE":       "IW – React + Django API",
     "DESCRIPTION": "API para IW",
-    "VERSION":     "1.0.0"
+    "VERSION":     "1.0.0",
+
+    # Definimos el esquema de seguridad Basic Auth
+    "SECURITY_SCHEMES": {
+        "basicAuth": {
+            "type": "http",
+            "scheme": "basic"
+        }
+    },
+    # Lo aplicamos globalmente a todos los endpoints
+    "SECURITY": [
+        {"basicAuth": []}
+    ],
 }
 
 # ─── Internacionalización ──────────────────────────────────────────────

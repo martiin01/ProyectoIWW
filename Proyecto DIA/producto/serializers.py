@@ -19,5 +19,5 @@ class ProductoSerializer(serializers.ModelSerializer):
             "nombre",
             "descripcion",
             "precio",
-            "cupones",      # opcional
+            "cupones",
         ]

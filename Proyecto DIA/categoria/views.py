@@ -16,6 +16,10 @@ class CategoriaViewSet(viewsets.ModelViewSet):
     queryset = Categoria.objects.all()
     serializer_class = CategoriaSerializer
 
+    def perform_create(self, serializer):
+        # aquí le pasamos el usuario logueado
+        serializer.save(usuario=self.request.user)
+
     def list(self, request, *args, **kwargs):
         """
         Si viene ?select=1,2,3 filtra solo esas categorías por PK;
