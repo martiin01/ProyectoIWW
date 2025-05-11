@@ -599,7 +599,3 @@ FodyWeavers.xsd
 
 ### VisualStudio Patch ###
 # Additional files built by Visual Studio
-
-# End of https://www.toptal.com/developers/gitignore/api/visualstudio,django,react,virtualenv
-/Proyecto DIA/producto/migrations/0003_alter_producto_options_rename_name_producto_nombre_and_more.py
-/Proyecto DIA/cupon/migrations/0005_alter_cupon_options_remove_cupon_iduser_and_more.py
